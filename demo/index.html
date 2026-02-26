@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>hashvatar — demo</title>
+		<link
+			rel="stylesheet"
+			href="https://cdn.jsdelivr.net/npm/@fontsource/geist-mono@5.0.3/400.css" />
+		<style>
+			*,
+			*::before,
+			*::after {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+			}
+			:root {
+				--bg: #0a0a0a;
+				--surface: #141414;
+				--border: #222;
+				--text: #e4e4e4;
+				--muted: #737373;
+			}
+			body {
+				background: var(--bg);
+				color: var(--text);
+				font-family: "Geist Mono", monospace;
+				min-height: 100vh;
+				font-size: 13px;
+				line-height: 1.5;
+			}
+			.wrap {
+				max-width: 640px;
+				margin: 0 auto;
+				padding: 32px 24px;
+			}
+			h1 {
+				font-size: 14px;
+				font-weight: 400;
+				color: var(--muted);
+				text-transform: uppercase;
+				letter-spacing: 0.08em;
+				margin-bottom: 24px;
+			}
+			.row {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 24px;
+				align-items: flex-start;
+				margin-bottom: 32px;
+			}
+			.row-stack {
+				flex-direction: column;
+				gap: 16px;
+			}
+			.field {
+				display: flex;
+				flex-direction: column;
+				gap: 6px;
+			}
+			label {
+				font-size: 11px;
+				color: var(--muted);
+				text-transform: uppercase;
+				letter-spacing: 0.06em;
+			}
+			input[type="text"] {
+				background: var(--surface);
+				border: 1px solid var(--border);
+				color: var(--text);
+				font-family: inherit;
+				font-size: 12px;
+				padding: 8px 12px;
+				width: 280px;
+				outline: none;
+			}
+			input[type="text"]:focus {
+				border-color: var(--muted);
+			}
+			.toggle-group {
+				display: flex;
+				border: 1px solid var(--border);
+			}
+			.toggle-group button {
+				background: none;
+				border: none;
+				color: var(--muted);
+				font-family: inherit;
+				font-size: 11px;
+				padding: 8px 14px;
+				cursor: pointer;
+				text-transform: uppercase;
+				letter-spacing: 0.04em;
+			}
+			.toggle-group button.active {
+				background: var(--surface);
+				color: var(--text);
+			}
+			.export-block {
+				width: 100%;
+			}
+			.export-block .section-label {
+				margin-bottom: 8px;
+			}
+			.export-row {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				flex-wrap: wrap;
+			}
+			.export-size-select {
+				background: var(--surface);
+				border: 1px solid var(--border);
+				color: var(--text);
+				font-family: inherit;
+				font-size: 12px;
+				padding: 6px 10px;
+				outline: none;
+			}
+			.export-size-select:focus {
+				border-color: var(--muted);
+			}
+			.download-png-btn {
+				background: var(--surface);
+				border: 1px solid var(--border);
+				color: var(--text);
+				font-family: inherit;
+				font-size: 11px;
+				padding: 8px 14px;
+				cursor: pointer;
+				text-transform: uppercase;
+				letter-spacing: 0.04em;
+			}
+			.check-row {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+			}
+			input[type="checkbox"] {
+				accent-color: var(--text);
+			}
+			.tones-input {
+				background: var(--surface);
+				border: 1px solid var(--border);
+				color: var(--text);
+				font-family: inherit;
+				font-size: 12px;
+				padding: 8px 12px;
+				width: 240px;
+				outline: none;
+			}
+			.tone-pills {
+				display: flex;
+				gap: 6px;
+				flex-wrap: wrap;
+				margin-top: 6px;
+			}
+			.tone-pill {
+				background: var(--surface);
+				border: 1px solid var(--border);
+				cursor: pointer;
+				display: flex;
+				align-items: center;
+				gap: 6px;
+				padding: 4px 8px 4px 4px;
+				font-size: 11px;
+				color: var(--muted);
+			}
+			.tone-pill:hover {
+				opacity: 0.8;
+			}
+			.tone-swatch {
+				width: 12px;
+				height: 12px;
+				border-radius: 50%;
+			}
+			.section {
+				margin-bottom: 28px;
+			}
+			.section-label {
+				font-size: 11px;
+				color: var(--muted);
+				text-transform: uppercase;
+				letter-spacing: 0.06em;
+				margin-bottom: 12px;
+			}
+			.live-row {
+				display: flex;
+				flex-direction: column;
+				gap: 24px;
+				align-items: flex-start;
+				flex-wrap: wrap;
+			}
+			.live-canvas-wrap canvas {
+				display: block;
+				border-radius: 50%;
+			}
+			.live-canvas-wrap.squircle canvas {
+				border-radius: 28%;
+			}
+			.live-canvas-wrap.square canvas {
+				border-radius: 0;
+			}
+			.colors-display {
+				display: grid;
+				gap: 20px;
+			}
+			.colors-display--stack {
+				grid-template-columns: 1fr;
+			}
+			.colors-display--grid {
+				grid-template-columns: 1fr 1fr;
+				column-gap: 32px;
+			}
+			.color-row {
+				display: flex;
+				align-items: center;
+				gap: 14px;
+			}
+			.color-swatch {
+				width: 36px;
+				height: 36px;
+				border-radius: 0;
+				flex-shrink: 0;
+			}
+			.color-info {
+				font-size: 11px;
+				color: var(--muted);
+				line-height: 1.6;
+			}
+			.color-info .hex {
+				color: var(--text);
+			}
+			.color-info .oklch {
+				color: var(--muted);
+			}
+			.copyable {
+				cursor: pointer;
+				padding: 1px 2px;
+				margin: -1px -2px;
+				border-radius: 2px;
+			}
+			.copyable:hover {
+				background: var(--surface);
+			}
+			.copyable.copied {
+				color: #86efac;
+			}
+			.grid {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 20px;
+			}
+			.avatar-card {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 8px;
+				cursor: pointer;
+			}
+			.avatar-card canvas {
+				border-radius: 50%;
+				display: block;
+				transition: opacity 0.2s;
+			}
+			.grid.shape-squircle .avatar-card canvas {
+				border-radius: 28%;
+			}
+			.grid.shape-square .avatar-card canvas {
+				border-radius: 0;
+			}
+			.avatar-card:hover canvas {
+				opacity: 0.85;
+			}
+			.avatar-label {
+				font-size: 11px;
+				color: var(--muted);
+				max-width: 72px;
+				text-align: center;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+			pre {
+				background: var(--surface);
+				border: 1px solid var(--border);
+				padding: 16px;
+				font-family: inherit;
+				font-size: 11px;
+				line-height: 1.7;
+				color: var(--muted);
+				overflow: hidden;
+				white-space: pre-wrap;
+				word-break: break-word;
+			}
+			.kw {
+				color: #a78bfa;
+			}
+			.fn {
+				color: #7dd3fc;
+			}
+			.str {
+				color: #86efac;
+			}
+			.cm {
+				color: #525252;
+			}
+			.num {
+				color: #f472b6;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="wrap">
+			<h1>hashvatar</h1>
+
+			<div class="row row-stack">
+				<div class="field">
+					<label>Mode</label>
+					<div class="toggle-group">
+						<button class="active" data-mode="gradient">gradient</button>
+						<button data-mode="dither">dither</button>
+					</div>
+				</div>
+				<div class="field">
+					<label>Shape</label>
+					<div class="toggle-group">
+						<button class="active" data-shape="circle">circle</button>
+						<button data-shape="squircle">squircle</button>
+						<button data-shape="square">square</button>
+					</div>
+				</div>
+				<div class="field">
+					<label>Animated</label>
+					<div class="toggle-group">
+						<button id="animatedOff" class="active" data-animated="off">off</button>
+						<button id="animatedOn" data-animated="on">on</button>
+					</div>
+				</div>
+				<div class="field">
+					<label>Tones (Enter)</label>
+					<input
+						type="text"
+						class="tones-input"
+						id="toneInput"
+						placeholder="red, #ff69b4…" />
+					<div class="tone-pills" id="tonePills"></div>
+				</div>
+				<div class="field">
+					<label>Type anything</label>
+					<input
+						type="text"
+						id="hashInput"
+						value="medhy.eth"
+						placeholder="address, username…" />
+				</div>
+			</div>
+
+			<div class="section">
+				<div class="section-label">Preview</div>
+				<div class="live-row">
+					<div>
+						<div class="live-canvas-wrap" id="liveWrap">
+							<canvas id="liveCanvas"></canvas>
+						</div>
+					</div>
+					<div class="colors-display colors-display--grid" id="colorsDisplay"></div>
+					<div class="export-block">
+						<div class="section-label">Export</div>
+						<div class="export-row">
+							<select id="exportSize" class="export-size-select" aria-label="Export size in pixels">
+								<option value="32">32×32</option>
+								<option value="64">64×64</option>
+								<option value="128">128×128</option>
+								<option value="256">256×256</option>
+								<option value="512">512×512</option>
+								<option value="1024" selected>1024×1024</option>
+							</select>
+							<button type="button" class="download-png-btn" id="downloadPngBtn">Download PNG</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="section">
+				<div class="section-label">Samples</div>
+				<div class="grid" id="gallery"></div>
+			</div>
+
+			<div class="section">
+				<div class="section-label">Usage</div>
+				<pre id="codeBlock"></pre>
+			</div>
+		</div>
+
+		<script type="module">
+			import {
+				hashToColors,
+				hashToSeeds,
+				oklchToHex,
+				oklchToCss,
+			} from "../src/index.js?v=8";
+			import { renderGradient } from "../src/gradient.js?v=8";
+			import { renderDither } from "../src/dither.js?v=8";
+			import { parseTone } from "../src/color.js?v=8";
+
+			let state = {
+				mode: "gradient",
+				shape: "circle",
+				animated: false,
+				tones: [],
+				cancelLive: null,
+				cancelGallery: [],
+			};
+
+			const SAMPLES = [
+				{ label: "medhy.eth", value: "medhy.eth" },
+				{
+					label: "0x742…44e",
+					value: "0x742d35cc6634c0532925a3b844bc454e4438f44e",
+				},
+				{ label: "satoshi", value: "satoshi" },
+				{ label: "saira", value: "saira" },
+			];
+
+			function getColors(hash) {
+				return hashToColors(
+					hash,
+					state.tones.length ? state.tones : undefined,
+					state.mode === "gradient" ? 4 : 2,
+				);
+			}
+
+			function render(canvas, hash, size) {
+				const colors = getColors(hash);
+				const seeds = hashToSeeds(hash, 4);
+				return state.mode === "dither"
+					? renderDither(canvas, {
+							size,
+							colors,
+							animated: state.animated,
+							seeds,
+						})
+					: renderGradient(canvas, {
+							size,
+							colors,
+							animated: state.animated,
+							seeds,
+						});
+			}
+
+			function renderLive(hash) {
+				if (state.cancelLive) {
+					state.cancelLive();
+					state.cancelLive = null;
+				}
+				const canvas = document.getElementById("liveCanvas");
+				const cancel = render(canvas, hash, 140);
+				if (cancel) state.cancelLive = cancel;
+				const liveWrap = document.getElementById("liveWrap");
+				liveWrap.classList.remove("square", "squircle");
+				if (state.shape === "square") liveWrap.classList.add("square");
+				else if (state.shape === "squircle") liveWrap.classList.add("squircle");
+
+				const colors = getColors(hash);
+				const colorsEl = document.getElementById("colorsDisplay");
+				colorsEl.innerHTML = colors
+					.map((col, i) => {
+						const hex = oklchToHex(col);
+						const oklch = oklchToCss(col);
+						return `<div class="color-row">
+      <div class="color-swatch" style="background:${hex}"></div>
+      <div class="color-info">color ${i + 1}<br><span class="hex copyable" data-copy="${hex.replace(/"/g, "&quot;")}" title="Click to copy">${hex}</span><br><span class="oklch copyable" data-copy="${oklch.replace(/"/g, "&quot;")}" title="Click to copy">${oklch}</span></div>
+    </div>`;
+					})
+					.join("");
+				colorsEl.classList.remove("colors-display--stack", "colors-display--grid");
+				colorsEl.classList.add(colors.length === 2 ? "colors-display--stack" : "colors-display--grid");
+				document
+					.getElementById("colorsDisplay")
+					.querySelectorAll(".copyable")
+					.forEach((el) => {
+						el.addEventListener("click", () => {
+							const text = el.getAttribute("data-copy");
+							if (text && navigator.clipboard?.writeText) {
+								navigator.clipboard.writeText(text);
+								el.classList.add("copied");
+								setTimeout(() => el.classList.remove("copied"), 600);
+							}
+						});
+					});
+
+				const modeCode =
+					state.mode !== "gradient" ? `,\n  mode: '${state.mode}'` : "";
+				const animCode = state.animated ? `,\n  animated: true` : "";
+				const tonesCode = state.tones.length
+					? `,\n  tones: [${state.tones.map((t) => `'${t}'`).join(", ")}]`
+					: "";
+				document.getElementById("codeBlock").innerHTML =
+					`<span class="cm">// Vanilla JS</span>
+<span class="kw">import</span> { createHashvatar } <span class="kw">from</span> <span class="str">'hashvatar'</span>;
+
+<span class="kw">const</span> { canvas } = <span class="fn">createHashvatar</span>({
+  hash: <span class="str">'${hash}'</span>${modeCode}${animCode}${tonesCode},
+  size: <span class="num">64</span>,
+});
+
+<span class="cm">// React</span>
+<span class="kw">import</span> { Hashvatar } <span class="kw">from</span> <span class="str">'hashvatar/react'</span>;
+<span class="fn">&lt;Hashvatar</span> hash=<span class="str">"${hash}"</span>${state.mode !== "gradient" ? ` mode=<span class="str">"${state.mode}"</span>` : ""}${state.animated ? " animated" : ""}${state.tones.length ? ` tones={[${state.tones.map((t) => `<span class="str">'${t}'</span>`).join(",")}]}` : ""} size=<span class="num">{64}</span> <span class="fn">/&gt;</span>`;
+			}
+
+			function renderGallery() {
+				state.cancelGallery.forEach((cb) => {
+					if (typeof cb === "function") cb();
+				});
+				state.cancelGallery = [];
+				const gridEl = document.getElementById("gallery");
+				gridEl.classList.remove("shape-square", "shape-squircle");
+				if (state.shape === "square") gridEl.classList.add("shape-square");
+				else if (state.shape === "squircle") gridEl.classList.add("shape-squircle");
+				gridEl.innerHTML = "";
+				SAMPLES.forEach((item) => {
+					const card = document.createElement("div");
+					card.className = "avatar-card";
+					const canvas = document.createElement("canvas");
+					const cancel = render(canvas, item.value, 72);
+					if (cancel) state.cancelGallery.push(cancel);
+					const lbl = document.createElement("div");
+					lbl.className = "avatar-label";
+					lbl.textContent = item.label;
+					canvas.addEventListener("click", () => {
+						document.getElementById("hashInput").value = item.value;
+						renderLive(item.value);
+					});
+					card.append(canvas, lbl);
+					gridEl.appendChild(card);
+				});
+			}
+
+			function renderTonePills() {
+				const el = document.getElementById("tonePills");
+				el.innerHTML = state.tones
+					.map((t, i) => {
+						const hex = oklchToHex(parseTone(t) || { l: 0.5, c: 0.1, h: 0 });
+						return `<button class="tone-pill" data-i="${i}"><span class="tone-swatch" style="background:${hex}"></span>${t}</button>`;
+					})
+					.join("");
+				el.querySelectorAll(".tone-pill").forEach((btn) =>
+					btn.addEventListener("click", () => {
+						state.tones.splice(+btn.dataset.i, 1);
+						renderTonePills();
+						renderLive(hashInput.value || "default");
+						renderGallery();
+					}),
+				);
+			}
+
+			function downloadPreviewPng() {
+				const src = document.getElementById("liveCanvas");
+				const size = Number(document.getElementById("exportSize").value) || 1024;
+				const out = document.createElement("canvas");
+				out.width = size;
+				out.height = size;
+				const ctx = out.getContext("2d");
+				ctx.drawImage(src, 0, 0, src.width, src.height, 0, 0, size, size);
+				ctx.globalCompositeOperation = "destination-in";
+				if (state.shape === "circle") {
+					ctx.beginPath();
+					ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+					ctx.fill();
+				} else if (state.shape === "squircle") {
+					ctx.beginPath();
+					const r = size * 0.28;
+					if (typeof ctx.roundRect === "function") {
+						ctx.roundRect(0, 0, size, size, r);
+					} else {
+						ctx.moveTo(r, 0);
+						ctx.lineTo(size - r, 0);
+						ctx.arcTo(size, 0, size, r, r);
+						ctx.lineTo(size, size - r);
+						ctx.arcTo(size, size, size - r, size, r);
+						ctx.lineTo(r, size);
+						ctx.arcTo(0, size, 0, size - r, r);
+						ctx.lineTo(0, r);
+						ctx.arcTo(0, 0, r, 0, r);
+					}
+					ctx.fill();
+				} else {
+					ctx.fillRect(0, 0, size, size);
+				}
+				const link = document.createElement("a");
+				link.download = "hashvatar.png";
+				link.href = out.toDataURL("image/png");
+				link.click();
+			}
+
+			document.getElementById("downloadPngBtn").addEventListener("click", downloadPreviewPng);
+
+			const hashInput = document.getElementById("hashInput");
+			hashInput.addEventListener("input", () =>
+				renderLive(hashInput.value || "default"),
+			);
+
+			document.querySelectorAll("[data-mode]").forEach((btn) =>
+				btn.addEventListener("click", () => {
+					document
+						.querySelectorAll("[data-mode]")
+						.forEach((b) => b.classList.remove("active"));
+					btn.classList.add("active");
+					state.mode = btn.dataset.mode;
+					renderLive(hashInput.value || "default");
+					renderGallery();
+				}),
+			);
+
+			document.querySelectorAll("[data-animated]").forEach((btn) =>
+				btn.addEventListener("click", () => {
+					state.animated = btn.dataset.animated === "on";
+					document.querySelectorAll("[data-animated]").forEach((b) => b.classList.remove("active"));
+					btn.classList.add("active");
+					renderLive(hashInput.value || "default");
+					renderGallery();
+				}),
+			);
+
+			const toneInput = document.getElementById("toneInput");
+			toneInput.addEventListener("keydown", (e) => {
+				if (e.key !== "Enter") return;
+				const val = toneInput.value.trim();
+				if (!val || !parseTone(val)) return;
+				state.tones.push(val);
+				toneInput.value = "";
+				renderTonePills();
+				renderLive(hashInput.value || "default");
+				renderGallery();
+			});
+
+			document.querySelectorAll("[data-shape]").forEach((btn) =>
+				btn.addEventListener("click", () => {
+					if (!btn.dataset.shape) return;
+					document
+						.querySelectorAll("[data-shape]")
+						.forEach((b) => b.classList.remove("active"));
+					btn.classList.add("active");
+					state.shape = btn.dataset.shape;
+					const liveWrap = document.getElementById("liveWrap");
+					liveWrap.classList.remove("square", "squircle");
+					if (state.shape === "square") liveWrap.classList.add("square");
+					else if (state.shape === "squircle") liveWrap.classList.add("squircle");
+					const galleryEl = document.getElementById("gallery");
+					galleryEl.classList.remove("shape-square", "shape-squircle");
+					if (state.shape === "square") galleryEl.classList.add("shape-square");
+					else if (state.shape === "squircle") galleryEl.classList.add("shape-squircle");
+				}),
+			);
+
+			renderLive(hashInput.value);
+			renderGallery();
+		</script>
+	</body>
+</html>
