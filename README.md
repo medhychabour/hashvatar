@@ -1,6 +1,6 @@
 # hashvatar
 
-Deterministic avatars from any string — wallet address, username, UUID. **Zero dependencies** in core.
+Deterministic avatars from any string — wallet address, username, UUID. **Zero dependencies**.
 
 Two modes: **gradient** (radial blends) and **dither** (Bayer halftone + linear gradient).
 
@@ -27,11 +27,11 @@ Then open **http://localhost:5000/demo/** in your browser.
 ### Vanilla JS
 
 ```js
-import { createHashvatar } from 'hashvatar';
+import { createHashvatar } from "hashvatar";
 
 const { canvas, destroy } = createHashvatar({
-  hash: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
-  size: 64,
+	hash: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+	size: 64,
 });
 
 document.body.appendChild(canvas);
@@ -46,8 +46,8 @@ destroy();
 import { Hashvatar } from 'hashvatar/react';
 
 <Hashvatar hash="vitalik.eth" size={48} />
-<Hashvatar hash="alice" size={64} mode="dither" />
-<Hashvatar hash="0xABC..." size={64} animated tones={['hotpink', '#00ff99']} />
+<Hashvatar hash="satoshi" size={64} mode="dither" />
+<Hashvatar hash="0x742…44e" size={64} animated tones={['hotpink', '#00ff99']} />
 ```
 
 React is an optional peer dependency — only install it if you use `hashvatar/react`.
@@ -56,14 +56,14 @@ React is an optional peer dependency — only install it if you use `hashvatar/r
 
 ## Options
 
-| Option     | Type                    | Default      | Description |
-|------------|-------------------------|--------------|-------------|
-| `hash`     | `string`                | —            | Any string. Same string = same avatar. |
-| `size`     | `number`                | `64`         | Canvas size in px (square). |
-| `mode`     | `'gradient' \| 'dither'` | `'gradient'` | Render style. |
-| `animated` | `boolean`               | `false`      | Animation loop. |
-| `dotScale` | `number`                | —            | Dither cell size. If omitted, scales with canvas for consistent look. |
-| `tones`    | `string[]`              | —            | Restrict palette (hex, `oklch()`, CSS color names). |
+| Option     | Type                     | Default      | Description                                                           |
+| ---------- | ------------------------ | ------------ | --------------------------------------------------------------------- |
+| `hash`     | `string`                 | —            | Any string. Same string = same avatar.                                |
+| `size`     | `number`                 | `64`         | Canvas size in px (square).                                           |
+| `mode`     | `'gradient' \| 'dither'` | `'gradient'` | Render style.                                                         |
+| `animated` | `boolean`                | `false`      | Animation loop.                                                       |
+| `dotScale` | `number`                 | —            | Dither cell size. If omitted, scales with canvas for consistent look. |
+| `tones`    | `string[]`               | —            | Restrict palette (hex, `oklch()`, CSS color names).                   |
 
 **`createHashvatar(options)`** — returns `{ canvas, colors, destroy }`.
 
@@ -81,7 +81,7 @@ The canvas is **square**. To show a circle:
 
 ```css
 canvas {
-  border-radius: 50%;
+	border-radius: 50%;
 }
 ```
 
@@ -93,13 +93,13 @@ The React component already uses `border-radius: 50%` by default. You can also u
 
 ```js
 // Single hue family
-createHashvatar({ hash, tones: ['hotpink'] });
+createHashvatar({ hash, tones: ["hotpink"] });
 
 // Multiple
-createHashvatar({ hash, tones: ['#ff6b6b', '#4ecdc4'] });
+createHashvatar({ hash, tones: ["#ff6b6b", "#4ecdc4"] });
 
 // oklch
-createHashvatar({ hash, tones: ['oklch(0.65 0.25 310)'] });
+createHashvatar({ hash, tones: ["oklch(0.65 0.25 310)"] });
 ```
 
 ---
@@ -124,4 +124,4 @@ npm publish
 
 ---
 
-MIT — [Médhy](https://github.com/medhy) · [repo](https://github.com/medhy/hashvatar)
+MIT — [Médhy](https://github.com/medhchabour) · [repo](https://github.com/medhychabour/hashvatar)
