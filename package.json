@@ -1,6 +1,6 @@
 {
   "name": "hashvatar",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Deterministic avatar generation from any hash string. Zero dependencies.",
   "author": "Médhy",
   "license": "MIT",
@@ -27,7 +27,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "demo": "npx serve . -p 5000",
+    "demo": "npx serve . -l tcp://0.0.0.0:5000",
     "prepublishOnly": "npm run build"
   },
   "devDependencies": {
@@ -57,6 +57,6 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/medhy/hashvatar"
+    "url": "git+https://github.com/medhychabour/hashvatar.git"
   }
 }

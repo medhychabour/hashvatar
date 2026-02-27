@@ -18,7 +18,73 @@ const SHAPES: [number, number][][] = [
   [[0.45, 0.08], [0.82, 0.3], [0.7, 0.85], [0.3, 0.88], [0.08, 0.5], [0.25, 0.25]],
 ];
 
-function drawBlurredShape(
+// Safari < 18 and iOS don't support ctx.filter. Fallback: pixel-based box blur (3 passes ≈ Gaussian).
+let _filterSupported: boolean | null = null;
+
+function hasFilterBlur(): boolean {
+  if (_filterSupported !== null) return _filterSupported;
+  try {
+    const c = document.createElement('canvas');
+    c.width = 30;
+    c.height = 30;
+    const x = c.getContext('2d')!;
+    x.fillStyle = '#fff';
+    x.fillRect(0, 0, 30, 30);
+    x.filter = 'blur(6px)';
+    x.fillStyle = '#000';
+    x.fillRect(12, 12, 4, 4);
+    _filterSupported = x.getImageData(22, 22, 1, 1).data[0] < 255;
+    x.filter = 'none';
+  } catch {
+    _filterSupported = false;
+  }
+  return _filterSupported;
+}
+
+// 3-pass box blur on ImageData (sliding window, O(w*h) per pass). Approximates Gaussian blur.
+function boxBlurCanvas(ctx: CanvasRenderingContext2D, w: number, h: number, radius: number, passes = 3): void {
+  const r = Math.max(1, Math.round((Math.sqrt(4 * radius * radius + 1) - 1) / 2));
+  const imgData = ctx.getImageData(0, 0, w, h);
+  const s = imgData.data;
+  const d = new Uint8ClampedArray(s.length);
+  const diam = r * 2 + 1;
+  const inv = 1 / diam;
+
+  for (let pass = 0; pass < passes; pass++) {
+    for (let y = 0; y < h; y++) {
+      const row = y * w;
+      let rs = 0, gs = 0, bs = 0, as = 0;
+      for (let dx = -r; dx <= r; dx++) {
+        const i = (row + Math.max(0, Math.min(w - 1, dx))) << 2;
+        rs += s[i]; gs += s[i | 1]; bs += s[i | 2]; as += s[i | 3];
+      }
+      for (let x = 0; x < w; x++) {
+        const o = (row + x) << 2;
+        d[o] = rs * inv; d[o | 1] = gs * inv; d[o | 2] = bs * inv; d[o | 3] = as * inv;
+        const ai = (row + Math.min(w - 1, x + r + 1)) << 2;
+        const ri = (row + Math.max(0, x - r)) << 2;
+        rs += s[ai] - s[ri]; gs += s[ai | 1] - s[ri | 1]; bs += s[ai | 2] - s[ri | 2]; as += s[ai | 3] - s[ri | 3];
+      }
+    }
+    for (let x = 0; x < w; x++) {
+      let rs = 0, gs = 0, bs = 0, as = 0;
+      for (let dy = -r; dy <= r; dy++) {
+        const i = (Math.max(0, Math.min(h - 1, dy)) * w + x) << 2;
+        rs += d[i]; gs += d[i | 1]; bs += d[i | 2]; as += d[i | 3];
+      }
+      for (let y = 0; y < h; y++) {
+        const o = (y * w + x) << 2;
+        s[o] = rs * inv; s[o | 1] = gs * inv; s[o | 2] = bs * inv; s[o | 3] = as * inv;
+        const ai = (Math.min(h - 1, y + r + 1) * w + x) << 2;
+        const ri = (Math.max(0, y - r) * w + x) << 2;
+        rs += d[ai] - d[ri]; gs += d[ai | 1] - d[ri | 1]; bs += d[ai | 2] - d[ri | 2]; as += d[ai | 3] - d[ri | 3];
+      }
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
+}
+
+function drawShape(
   ctx: CanvasRenderingContext2D,
   path: [number, number][],
   size: number,
@@ -49,14 +115,23 @@ function drawBlurredShape(
   ctx.restore();
 }
 
+function getDevicePixelRatio(): number {
+  if (typeof window === 'undefined' || !window.devicePixelRatio) return 1;
+  return Math.min(window.devicePixelRatio, 3);
+}
+
 export function renderGradient(
   canvas: HTMLCanvasElement,
   { size, colors, animated = false, seeds }: GradientOptions,
 ): (() => void) | null {
   if (colors.length < 4) return null;
-  canvas.width = size;
-  canvas.height = size;
+  const dpr = getDevicePixelRatio();
+  canvas.width = size * dpr;
+  canvas.height = size * dpr;
+  canvas.style.width = `${size}px`;
+  canvas.style.height = `${size}px`;
   const ctx = canvas.getContext('2d')!;
+  ctx.scale(dpr, dpr);
 
   const mix =
     seeds[0].toString() +
@@ -90,6 +165,7 @@ export function renderGradient(
 
   const blur = Math.max(8, Math.round(size * 0.21));
   const pad = Math.ceil(blur * 1.9);
+  const useFilter = hasFilterBlur();
 
   const ROT_SPEEDS = [0.5, 0.6, 0.45, 0.55, 0.5, 0.65];
   const DRIFT_AMP = size * 0.18;
@@ -97,16 +173,20 @@ export function renderGradient(
   const DRIFT_PHASE_OFFSETS = [0, 1, 2, 0.5, 1.5, 3];
   const PHASE_SPEED = 1.2;
 
+  const w = size + pad * 2;
+  const h = size + pad * 2;
+  // Fallback (box blur) is heavy: in animated mode use half-res layers to keep 60fps on mobile
+  const animResScale = !useFilter && animated ? 0.5 : 1;
+  const offCanvas = document.createElement('canvas');
+  offCanvas.width = w * dpr * animResScale;
+  offCanvas.height = h * dpr * animResScale;
+  const offCtx = offCanvas.getContext('2d')!;
+  offCtx.scale(dpr * animResScale, dpr * animResScale);
+
   const draw = (phase: number) => {
     ctx.clearRect(0, 0, size, size);
     ctx.fillStyle = hex0;
     ctx.fillRect(0, 0, size, size);
-
-    const w = size + pad * 2;
-    const h = size + pad * 2;
-    const offCtx = document.createElement('canvas').getContext('2d')!;
-    offCtx.canvas.width = w;
-    offCtx.canvas.height = h;
 
     for (let i = 0; i < 6; i++) {
       const layer = layers[i];
@@ -119,24 +199,23 @@ export function renderGradient(
       const hex = hexColors[i % 3];
 
       offCtx.clearRect(0, 0, w, h);
-      drawBlurredShape(
-        offCtx,
-        SHAPES[i],
-        size,
-        layer.tx + driftX,
-        layer.ty + driftY,
-        rot,
-        scale,
-        hex,
-        pad,
-        pad,
-      );
-      ctx.save();
-      ctx.filter = `blur(${blur}px)`;
-      ctx.globalCompositeOperation = opts.composite;
-      ctx.globalAlpha = opts.alpha;
-      ctx.drawImage(offCtx.canvas, 0, 0, w, h, -pad, -pad, w, h);
-      ctx.restore();
+      drawShape(offCtx, SHAPES[i], size, layer.tx + driftX, layer.ty + driftY, rot, scale, hex, pad, pad);
+
+      if (useFilter) {
+        ctx.save();
+        ctx.filter = `blur(${blur * dpr}px)`;
+        ctx.globalCompositeOperation = opts.composite;
+        ctx.globalAlpha = opts.alpha;
+        ctx.drawImage(offCanvas, 0, 0, offCanvas.width, offCanvas.height, -pad, -pad, w, h);
+        ctx.restore();
+      } else {
+        boxBlurCanvas(offCtx, offCanvas.width, offCanvas.height, blur * dpr * 1.4 * animResScale, animResScale < 1 ? 2 : 3);
+        ctx.save();
+        ctx.globalCompositeOperation = opts.composite;
+        ctx.globalAlpha = opts.alpha;
+        ctx.drawImage(offCanvas, 0, 0, offCanvas.width, offCanvas.height, -pad, -pad, w, h);
+        ctx.restore();
+      }
     }
 
     ctx.globalCompositeOperation = 'source-over';

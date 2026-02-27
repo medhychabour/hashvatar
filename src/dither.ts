@@ -28,28 +28,35 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
   return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
 }
 
+function getDevicePixelRatio(): number {
+  if (typeof window === 'undefined' || !window.devicePixelRatio) return 1;
+  return Math.min(window.devicePixelRatio, 3);
+}
+
 export function renderDither(
   canvas: HTMLCanvasElement,
   { size, colors, dotScale: dotScaleOpt, animated = false, seeds }: DitherOptions,
 ): (() => void) | null {
-  canvas.width  = size;
-  canvas.height = size;
+  const dpr = getDevicePixelRatio();
+  const sizePx = Math.round(size * dpr);
+  canvas.width = sizePx;
+  canvas.height = sizePx;
+  canvas.style.width = `${size}px`;
+  canvas.style.height = `${size}px`;
   const ctx = canvas.getContext('2d')!;
 
-  // Scale dot size with canvas size so proportions match gradient (same grain at any size)
-  const dotScale = dotScaleOpt ?? Math.max(2, Math.round(size / 35));
+  const dotScaleLogical = dotScaleOpt ?? Math.max(2, Math.round(size / 35));
+  const dotScale = Math.max(1, Math.round(dotScaleLogical * dpr));
 
   const colA = hexToRgb(oklchToHex(colors[0]));
   const colB = hexToRgb(oklchToHex(colors[Math.min(1, colors.length - 1)]));
 
-  // Gradient direction — base from hash; animated = slow swirl (rotation)
   const baseAngle = seeds[0] * Math.PI * 2;
   const falloff   = 0.55 + seeds[1] * 0.25;
-  const swirlSpeed = 0.45; // rad per second
+  const swirlSpeed = 0.45;
 
-  // Extend grid by 1 cell each side so dots reach the very edge
   const padding  = 1;
-  const gridSize = Math.ceil(size / dotScale) + padding * 2;
+  const gridSize = Math.ceil(sizePx / dotScale) + padding * 2;
 
   // Deterministic per-cell phase/amplitude for organic motion (same hash = same animation)
   const cellPhase = (gx: number, gy: number): number =>
@@ -58,15 +65,14 @@ export function renderDither(
     0.035 + (((gx * 7 + gy * 13 + seeds[2] * 50) | 0) % 55) / 1100;
 
   const draw = (phase: number) => {
-    const img = ctx.createImageData(size, size);
+    const img = ctx.createImageData(sizePx, sizePx);
     const d   = img.data;
 
     const angle = baseAngle + (animated ? phase * swirlSpeed : 0);
     const cosA = Math.cos(angle);
     const sinA = Math.sin(angle);
 
-    // Base fill: colB
-    for (let i = 0; i < size * size * 4; i += 4) {
+    for (let i = 0; i < sizePx * sizePx * 4; i += 4) {
       d[i] = colB.r; d[i + 1] = colB.g; d[i + 2] = colB.b; d[i + 3] = 255;
     }
 
@@ -89,18 +95,17 @@ export function renderDither(
 
         const tRaw   = (proj - drift + falloff) / (falloff * 2);
         const tClamp = Math.max(0, Math.min(1, tRaw));
-        const t      = tClamp * tClamp * (3 - 2 * tClamp); // smoothstep
+        const t      = tClamp * tClamp * (3 - 2 * tClamp);
 
         const bayer = BAYER8[gy % 8][gx % 8];
         if (t > bayer) continue;
 
-        // Paint colA dot
         for (let py = 0; py < dotScale; py++) {
           for (let px = 0; px < dotScale; px++) {
             const x = (gx - padding) * dotScale + px;
             const y = (gy - padding) * dotScale + py;
-            if (x < 0 || y < 0 || x >= size || y >= size) continue;
-            const idx = (y * size + x) * 4;
+            if (x < 0 || y < 0 || x >= sizePx || y >= sizePx) continue;
+            const idx = (y * sizePx + x) * 4;
             d[idx] = colA.r; d[idx + 1] = colA.g; d[idx + 2] = colA.b;
           }
         }

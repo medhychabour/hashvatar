@@ -334,12 +334,14 @@
 				<div class="field">
 					<label>Animated</label>
 					<div class="toggle-group">
-						<button id="animatedOff" class="active" data-animated="off">off</button>
+						<button id="animatedOff" class="active" data-animated="off">
+							off
+						</button>
 						<button id="animatedOn" data-animated="on">on</button>
 					</div>
 				</div>
 				<div class="field">
-					<label>Tones (Enter)</label>
+					<label>aaaTones (Enter)</label>
 					<input
 						type="text"
 						class="tones-input"
@@ -365,11 +367,16 @@
 							<canvas id="liveCanvas"></canvas>
 						</div>
 					</div>
-					<div class="colors-display colors-display--grid" id="colorsDisplay"></div>
+					<div
+						class="colors-display colors-display--grid"
+						id="colorsDisplay"></div>
 					<div class="export-block">
 						<div class="section-label">Export</div>
 						<div class="export-row">
-							<select id="exportSize" class="export-size-select" aria-label="Export size in pixels">
+							<select
+								id="exportSize"
+								class="export-size-select"
+								aria-label="Export size in pixels">
 								<option value="32">32×32</option>
 								<option value="64">64×64</option>
 								<option value="128">128×128</option>
@@ -377,7 +384,12 @@
 								<option value="512">512×512</option>
 								<option value="1024" selected>1024×1024</option>
 							</select>
-							<button type="button" class="download-png-btn" id="downloadPngBtn">Download PNG</button>
+							<button
+								type="button"
+								class="download-png-btn"
+								id="downloadPngBtn">
+								Download PNG
+							</button>
 						</div>
 					</div>
 				</div>
@@ -400,10 +412,10 @@
 				hashToSeeds,
 				oklchToHex,
 				oklchToCss,
-			} from "../src/index.js?v=8";
-			import { renderGradient } from "../src/gradient.js?v=8";
-			import { renderDither } from "../src/dither.js?v=8";
-			import { parseTone } from "../src/color.js?v=8";
+				parseTone,
+				renderGradient,
+				renderDither,
+			} from "../dist/index.js";
 
 			let state = {
 				mode: "gradient",
@@ -475,8 +487,15 @@
     </div>`;
 					})
 					.join("");
-				colorsEl.classList.remove("colors-display--stack", "colors-display--grid");
-				colorsEl.classList.add(colors.length === 2 ? "colors-display--stack" : "colors-display--grid");
+				colorsEl.classList.remove(
+					"colors-display--stack",
+					"colors-display--grid",
+				);
+				colorsEl.classList.add(
+					colors.length === 2
+						? "colors-display--stack"
+						: "colors-display--grid",
+				);
 				document
 					.getElementById("colorsDisplay")
 					.querySelectorAll(".copyable")
@@ -519,7 +538,8 @@
 				const gridEl = document.getElementById("gallery");
 				gridEl.classList.remove("shape-square", "shape-squircle");
 				if (state.shape === "square") gridEl.classList.add("shape-square");
-				else if (state.shape === "squircle") gridEl.classList.add("shape-squircle");
+				else if (state.shape === "squircle")
+					gridEl.classList.add("shape-squircle");
 				gridEl.innerHTML = "";
 				SAMPLES.forEach((item) => {
 					const card = document.createElement("div");
@@ -559,7 +579,8 @@
 
 			function downloadPreviewPng() {
 				const src = document.getElementById("liveCanvas");
-				const size = Number(document.getElementById("exportSize").value) || 1024;
+				const size =
+					Number(document.getElementById("exportSize").value) || 1024;
 				const out = document.createElement("canvas");
 				out.width = size;
 				out.height = size;
@@ -596,7 +617,9 @@
 				link.click();
 			}
 
-			document.getElementById("downloadPngBtn").addEventListener("click", downloadPreviewPng);
+			document
+				.getElementById("downloadPngBtn")
+				.addEventListener("click", downloadPreviewPng);
 
 			const hashInput = document.getElementById("hashInput");
 			hashInput.addEventListener("input", () =>
@@ -618,7 +641,9 @@
 			document.querySelectorAll("[data-animated]").forEach((btn) =>
 				btn.addEventListener("click", () => {
 					state.animated = btn.dataset.animated === "on";
-					document.querySelectorAll("[data-animated]").forEach((b) => b.classList.remove("active"));
+					document
+						.querySelectorAll("[data-animated]")
+						.forEach((b) => b.classList.remove("active"));
 					btn.classList.add("active");
 					renderLive(hashInput.value || "default");
 					renderGallery();
@@ -648,11 +673,13 @@
 					const liveWrap = document.getElementById("liveWrap");
 					liveWrap.classList.remove("square", "squircle");
 					if (state.shape === "square") liveWrap.classList.add("square");
-					else if (state.shape === "squircle") liveWrap.classList.add("squircle");
+					else if (state.shape === "squircle")
+						liveWrap.classList.add("squircle");
 					const galleryEl = document.getElementById("gallery");
 					galleryEl.classList.remove("shape-square", "shape-squircle");
 					if (state.shape === "square") galleryEl.classList.add("shape-square");
-					else if (state.shape === "squircle") galleryEl.classList.add("shape-squircle");
+					else if (state.shape === "squircle")
+						galleryEl.classList.add("shape-squircle");
 				}),
 			);
 

@@ -12,13 +12,14 @@ npm install hashvatar
 
 ## Demo
 
-From the repo root:
+From the repo root, build then run the demo:
 
 ```bash
+npm run build
 npm run demo
 ```
 
-Then open **http://localhost:5000/demo/** in your browser.
+Then open **http://localhost:5000/demo/** in your browser. The demo loads the built bundle from `dist/`.
 
 ---
 
@@ -124,4 +125,4 @@ npm publish
 
 ---
 
-MIT — [Médhy](https://github.com/medhchabour) · [repo](https://github.com/medhychabour/hashvatar)
+MIT — [Médhy](https://github.com/medhychabour) · [repo](https://github.com/medhychabour/hashvatar)

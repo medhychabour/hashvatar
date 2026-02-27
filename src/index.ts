@@ -11,7 +11,7 @@ import { renderGradient } from './gradient';
 import { renderDither } from './dither';
 
 export type { OklchColor, ToneInput };
-export { oklchToHex, oklchToCss, hashToSeeds };
+export { oklchToHex, oklchToCss, hashToSeeds, parseTone, renderGradient, renderDither };
 
 // ─── hashToColors ─────────────────────────────────────────────────────────────
 
