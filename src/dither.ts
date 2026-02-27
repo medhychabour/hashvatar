@@ -45,7 +45,7 @@ export function renderDither(
   canvas.style.height = `${size}px`;
   const ctx = canvas.getContext('2d')!;
 
-  const dotScaleLogical = dotScaleOpt ?? Math.max(2, Math.round(size / 35));
+  const dotScaleLogical = dotScaleOpt ?? Math.max(1, Math.round(size / 35));
   const dotScale = Math.max(1, Math.round(dotScaleLogical * dpr));
 
   const colA = hexToRgb(oklchToHex(colors[0]));

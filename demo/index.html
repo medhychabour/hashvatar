@@ -202,6 +202,37 @@
 			.live-canvas-wrap.square canvas {
 				border-radius: 0;
 			}
+			.preview-sizes {
+				display: flex;
+				flex-wrap: wrap;
+				align-items: flex-end;
+				gap: 16px;
+			}
+			.preview-size-item {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 4px;
+			}
+			.preview-size-item .preview-size-label {
+				font-size: 11px;
+				color: var(--muted);
+			}
+			.preview-size-item .live-canvas-wrap {
+				border: 1px solid var(--border);
+				border-radius: 50%;
+				overflow: hidden;
+				flex-shrink: 0;
+			}
+			.preview-size-item .live-canvas-wrap.square {
+				border-radius: 0;
+			}
+			.preview-size-item .live-canvas-wrap.squircle {
+				border-radius: 28%;
+			}
+			.preview-size-item .live-canvas-wrap canvas {
+				display: block;
+			}
 			.colors-display {
 				display: grid;
 				gap: 20px;
@@ -341,7 +372,7 @@
 					</div>
 				</div>
 				<div class="field">
-					<label>aaaTones (Enter)</label>
+					<label>Tones (Enter)</label>
 					<input
 						type="text"
 						class="tones-input"
@@ -363,8 +394,8 @@
 				<div class="section-label">Preview</div>
 				<div class="live-row">
 					<div>
-						<div class="live-canvas-wrap" id="liveWrap">
-							<canvas id="liveCanvas"></canvas>
+						<div class="preview-sizes" id="previewSizes">
+							<!-- filled by JS -->
 						</div>
 					</div>
 					<div
@@ -417,12 +448,14 @@
 				renderDither,
 			} from "../dist/index.js";
 
+			const PREVIEW_SIZES = [16, 32, 64, 128];
+
 			let state = {
 				mode: "gradient",
 				shape: "circle",
 				animated: false,
 				tones: [],
-				cancelLive: null,
+				cancelLiveBySize: {},
 				cancelGallery: [],
 			};
 
@@ -463,17 +496,26 @@
 			}
 
 			function renderLive(hash) {
-				if (state.cancelLive) {
-					state.cancelLive();
-					state.cancelLive = null;
-				}
-				const canvas = document.getElementById("liveCanvas");
-				const cancel = render(canvas, hash, 140);
-				if (cancel) state.cancelLive = cancel;
-				const liveWrap = document.getElementById("liveWrap");
-				liveWrap.classList.remove("square", "squircle");
-				if (state.shape === "square") liveWrap.classList.add("square");
-				else if (state.shape === "squircle") liveWrap.classList.add("squircle");
+				Object.values(state.cancelLiveBySize).forEach((cb) => {
+					if (typeof cb === "function") cb();
+				});
+				state.cancelLiveBySize = {};
+				const container = document.getElementById("previewSizes");
+				container.innerHTML = PREVIEW_SIZES.map(
+					(s) =>
+						`<div class="preview-size-item">
+						<span class="preview-size-label">${s}px</span>
+						<div class="live-canvas-wrap ${state.shape === "square" ? "square" : state.shape === "squircle" ? "squircle" : ""}" data-size="${s}">
+							<canvas ${s === 128 ? 'id="liveCanvas"' : ""} data-size="${s}"></canvas>
+						</div>
+					</div>`,
+				).join("");
+				PREVIEW_SIZES.forEach((size) => {
+					const wrap = container.querySelector(`.live-canvas-wrap[data-size="${size}"]`);
+					const canvas = wrap.querySelector("canvas");
+					const cancel = render(canvas, hash, size);
+					if (cancel) state.cancelLiveBySize[size] = cancel;
+				});
 
 				const colors = getColors(hash);
 				const colorsEl = document.getElementById("colorsDisplay");
@@ -670,11 +712,7 @@
 						.forEach((b) => b.classList.remove("active"));
 					btn.classList.add("active");
 					state.shape = btn.dataset.shape;
-					const liveWrap = document.getElementById("liveWrap");
-					liveWrap.classList.remove("square", "squircle");
-					if (state.shape === "square") liveWrap.classList.add("square");
-					else if (state.shape === "squircle")
-						liveWrap.classList.add("squircle");
+					renderLive(document.getElementById("hashInput").value || "default");
 					const galleryEl = document.getElementById("gallery");
 					galleryEl.classList.remove("shape-square", "shape-squircle");
 					if (state.shape === "square") galleryEl.classList.add("shape-square");

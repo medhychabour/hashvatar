@@ -163,7 +163,7 @@ export function renderGradient(
     { composite: 'soft-light', alpha: 0.6 },
   ];
 
-  const blur = Math.max(8, Math.round(size * 0.21));
+  const blur = Math.max(2, Math.round(size * 0.21));
   const pad = Math.ceil(blur * 1.9);
   const useFilter = hasFilterBlur();
 
